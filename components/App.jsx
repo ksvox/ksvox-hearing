@@ -137,6 +137,26 @@ function Main({ db, auth }) {
   };
 
   // ---- 保存(iPad → Firebase) ----
+  const sendOne = async (p) => {
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'hearings', p.id), {
+      date: p.date,
+      type: p.type,
+      name: p.answers.name || '',
+      kana: p.answers.kana || '',
+      hopeClass: p.type === 'counseling' ? '' : p.answers.hopeClass || '',
+      status: 'pending',
+      enrolledAt: null,
+      enrolledClass: null,
+      withdrawnAt: null,
+      sheetDeleted: false,
+      createdAt: serverTimestamp(),
+    });
+    batch.set(doc(db, 'hearingSheets', p.id), { answers: p.answers, strokes: p.strokes || [] });
+    await withTimeout(batch.commit(), 20000);
+    removePending(p.id);
+  };
+
   const saveAll = async () => {
     if (!navigator.onLine) {
       setNotice('ネットに接続してから「保存」を押してください。');
@@ -146,30 +166,37 @@ function Main({ db, auth }) {
     let ok = 0;
     try {
       for (const p of getPending()) {
-        const batch = writeBatch(db);
-        batch.set(doc(db, 'hearings', p.id), {
-          date: p.date,
-          type: p.type,
-          name: p.answers.name || '',
-          kana: p.answers.kana || '',
-          hopeClass: p.type === 'counseling' ? '' : p.answers.hopeClass || '',
-          status: 'pending',
-          enrolledAt: null,
-          enrolledClass: null,
-          withdrawnAt: null,
-          sheetDeleted: false,
-          createdAt: serverTimestamp(),
-        });
-        batch.set(doc(db, 'hearingSheets', p.id), { answers: p.answers, strokes: p.strokes || [] });
         // eslint-disable-next-line no-await-in-loop
-        await withTimeout(batch.commit(), 20000);
-        removePending(p.id);
+        await sendOne(p);
         ok += 1;
       }
       setNotice(`${ok}件を保存しました。`);
     } catch (e) {
       console.warn(e);
       setNotice('保存できませんでした。ネット接続を確認して、もう一度「保存」を押してください。');
+    } finally {
+      refreshPending();
+      setSaving(false);
+    }
+  };
+
+  // 所見画面の「保存して一覧へ」(つながっていなければ未保存のまま一覧へ)
+  const saveOneAndBack = async (id) => {
+    setNav({ screen: 'list' });
+    const p = getPending().find((x) => x.id === id);
+    if (!p) return;
+    if (!navigator.onLine) {
+      setNotice('ネットにつながっていないため、iPadに一時保存しました。後で一覧の「保存」を押してください。');
+      refreshPending();
+      return;
+    }
+    setSaving(true);
+    try {
+      await sendOne(p);
+      setNotice('保存しました。');
+    } catch (e) {
+      console.warn(e);
+      setNotice('送信できなかったため、iPadに一時保存しました。後で一覧の「保存」を押してください。');
     } finally {
       refreshPending();
       setSaving(false);
@@ -257,7 +284,7 @@ function Main({ db, auth }) {
     screen = <StartScreen onStart={startKiosk} onBack={() => setNav({ screen: 'list' })} />;
   } else if (nav.screen === 'sheet') {
     screen = <SheetRoute key={nav.id} db={db} id={nav.id} hearings={hearings} pending={pending} refreshPending={refreshPending}
-      onBack={() => setNav({ screen: 'list' })} onDelete={deleteRecord} />;
+      onBack={() => setNav({ screen: 'list' })} onDelete={deleteRecord} onSaveNow={saveOneAndBack} />;
   } else {
     screen = (
       <ListScreen
@@ -298,7 +325,7 @@ function Main({ db, auth }) {
 }
 
 // 1件のシートを開く(未保存ならiPadから、保存済みならFirebaseから)
-function SheetRoute({ db, id, hearings, pending, refreshPending, onBack, onDelete }) {
+function SheetRoute({ db, id, hearings, pending, refreshPending, onBack, onDelete, onSaveNow }) {
   const local = pending.find((p) => p.id === id);
   const meta = (hearings || []).find((h) => h.id === id);
   const remote = useDocData(local ? null : doc(db, 'hearingSheets', id), [id, !!local]);
@@ -341,6 +368,10 @@ function SheetRoute({ db, id, hearings, pending, refreshPending, onBack, onDelet
         unsaved
         onStrokes={onStrokes}
         onBack={back}
+        onSaveNow={() => {
+          flush();
+          onSaveNow(id);
+        }}
         onDelete={() => onDelete(id, true)}
       />
     );

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Lock } from 'lucide-react';
 import {
-  TYPES, OCCUPATIONS, HOPE_CLASSES, WEEKDAYS, HOURS, EMAIL_DOMAINS, SELF_CHECKS, MOTIVES, CONCERNS,
+  TYPES, OCCUPATIONS, HOPE_CLASSES, EMAIL_DOMAINS, SELF_CHECKS, MOTIVES, CONCERNS,
   PRIORITIES, MUSIC_EXP, MY_SONG, YNU, PRIVACY_NOTE,
 } from '../lib/formDef';
 import { calcAge } from '../lib/utils';
-import { Section, Field, Chips, MultiChips, SelfScale, QuestionRow } from './FormParts';
+import { Section, Field, Chips, MultiChips, SelfScale, QuestionRow, ScheduleTable } from './FormParts';
 import Modal from './Modal';
 
 const THIS_YEAR = new Date().getFullYear();
@@ -165,22 +165,12 @@ export default function FormScreen({ draft, onChange, onComplete, onTeacher }) {
             <Field label="希望クラス">
               <Chips options={HOPE_CLASSES} value={a.hopeClass} onChange={(v) => set({ hopeClass: v })} />
             </Field>
-            <Field label="レッスン可能な曜日" >
-              <MultiChips options={WEEKDAYS} values={a.days} onChange={(v) => set({ days: v })} />
-            </Field>
-            <Field label="レッスン可能な時間帯">
-              <div className="birth">
-                <select className="f-input" value={a.timeFrom} onChange={(e) => set({ timeFrom: e.target.value })}>
-                  <option value="">--</option>
-                  {HOURS.map((h) => <option key={h} value={h}>{h}時</option>)}
-                </select>
-                <span>以降</span>
-                <select className="f-input" value={a.timeTo} onChange={(e) => set({ timeTo: e.target.value })}>
-                  <option value="">--</option>
-                  {HOURS.map((h) => <option key={h} value={h}>{h}時</option>)}
-                </select>
-                <span>まで</span>
-              </div>
+            <Field label="レッスン可能な日時">
+              <ScheduleTable
+                schedule={a.schedule}
+                all={a.scheduleAll}
+                onChange={(schedule, scheduleAll) => set({ schedule, scheduleAll })}
+              />
             </Field>
           </Section>
         )}

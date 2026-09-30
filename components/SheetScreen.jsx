@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, CloudUpload } from 'lucide-react';
 import AnswerSummary from './AnswerSummary';
 import InkPad from './InkPad';
 import Modal from './Modal';
 import { formatDate } from '../lib/utils';
 
 // シートの中身(回答のまとめ+所見の手書き)
-export default function SheetScreen({ meta, sheet, unsaved, onStrokes, onBack, onDelete, onCancelEnroll }) {
+export default function SheetScreen({ meta, sheet, unsaved, onStrokes, onBack, onDelete, onCancelEnroll, onSaveNow }) {
   const [askDelete, setAskDelete] = useState(false);
   const [askCancel, setAskCancel] = useState(false);
 
@@ -18,7 +18,11 @@ export default function SheetScreen({ meta, sheet, unsaved, onStrokes, onBack, o
         <span className="topbar-sub">{formatDate(meta.date, true)}</span>
         {unsaved && <span className="pill warn">未保存</span>}
         <span className="spacer" />
-        <button className="btn small" onClick={onBack}>一覧へ</button>
+        {unsaved && onSaveNow ? (
+          <button className="btn primary small" onClick={onSaveNow}><CloudUpload size={18} /> 保存して一覧へ</button>
+        ) : (
+          <button className="btn small" onClick={onBack}>一覧へ</button>
+        )}
       </header>
 
       <div className="page-body narrow">

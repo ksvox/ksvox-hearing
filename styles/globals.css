@@ -211,6 +211,18 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); backgro
 .chip.check .box { width: 24px; height: 24px; border-radius: 6px; border: 1.5px solid var(--line-2); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fff; }
 .chip.check.on .box { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+/* レッスン可能な日時 */
+.schedule { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.schedule-note { font-size: 14px; color: var(--sub); margin: 0; padding: 10px 14px; background: var(--paper-2); border-bottom: 1px solid var(--line); }
+.day-row { display: flex; gap: 14px; padding: 12px 14px; border-bottom: 1px dashed var(--line); align-items: flex-start; }
+.day-row:last-child { border-bottom: none; }
+.day-row.head { background: var(--accent-soft); border-bottom: 2px solid var(--accent); }
+.day-label { width: 44px; font-size: 20px; font-weight: 700; padding-top: 8px; flex-shrink: 0; text-align: center; }
+.day-row.head .day-label { width: 44px; font-size: 14px; line-height: 1.3; padding-top: 4px; color: var(--accent-dark); }
+.day-body { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.day-time { display: flex; align-items: center; gap: 8px; }
+.day-time select { width: auto; min-width: 110px; font-size: 18px; padding: 10px 30px 10px 12px; }
+
 /* 自己診断(縦線で示す) */
 .scale { padding: 12px 0 16px; border-bottom: 1px dashed var(--line); }
 .scale:last-child { border-bottom: none; }

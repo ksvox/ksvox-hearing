@@ -1,4 +1,4 @@
-import { SELF_CHECKS, MUSIC_EXP, MY_SONG, TYPES, emailOf } from '../lib/formDef';
+import { SELF_CHECKS, MUSIC_EXP, MY_SONG, TYPES, emailOf, scheduleText } from '../lib/formDef';
 import { calcAge } from '../lib/utils';
 
 function Row({ label, children }) {
@@ -33,7 +33,6 @@ export default function AnswerSummary({ type, answers }) {
   const age = calcAge({ y: Number(b.y), m: Number(b.m), d: Number(b.d) });
   const birth = b.y ? `${b.y}年${b.m || '-'}月${b.d || '-'}日${age != null ? `(${age}歳)` : ''}` : '';
   const occupation = a.occupation === 'その他' && a.occupationOther ? `その他(${a.occupationOther})` : a.occupation;
-  const time = a.timeFrom || a.timeTo ? `${a.timeFrom ? `${a.timeFrom}時以降` : ''}${a.timeTo ? `〜${a.timeTo}時まで` : ''}` : '';
   const exp = MUSIC_EXP.map((q) => {
     const v = a.exp?.[q.key];
     if (!v) return null;
@@ -55,10 +54,9 @@ export default function AnswerSummary({ type, answers }) {
         <Row label="電話">{a.phone}</Row>
         <Row label="メール">{emailOf(a)}</Row>
         <Row label="希望クラス">{a.hopeClass}</Row>
-        <Row label="可能曜日">{(a.days || []).join('・')}</Row>
-        <Row label="時間帯">{time}</Row>
       </dl>
       <dl className="sum-grid one">
+        <Row label="可能日時">{scheduleText(a)}</Row>
         <Row label="動機">{withOther(a.motives, a.motivesOther)}</Row>
         <Row label="気になること">{withOther(a.concerns, a.concernsOther)}</Row>
         <Row label="聞きたいこと">{withOther(a.priorities, a.prioritiesOther)}</Row>

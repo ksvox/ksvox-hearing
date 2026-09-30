@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react';
+import { OPEN_DAYS, TIME_SLOTS, SCHEDULE_MODES } from '../lib/formDef';
 
 export function Section({ title, hint, children }) {
   return (
@@ -93,6 +94,62 @@ export function QuestionRow({ label, children }) {
     <div className="q-row">
       <div className="q-label">{label}</div>
       <div className="q-body">{children}</div>
+    </div>
+  );
+}
+
+function DayRow({ label, value, onChange, head }) {
+  const v = value || { mode: '' };
+  const pick = (mode) => {
+    if (mode === 'range') onChange({ mode, from: v.from || '14:30', to: v.to || '22:00' });
+    else onChange({ mode });
+  };
+  return (
+    <div className={`day-row ${head ? 'head' : ''}`}>
+      <div className="day-label">{label}</div>
+      <div className="day-body">
+        <div className="chips small">
+          {SCHEDULE_MODES.map((m) => (
+            <button type="button" key={m.key} className={`chip ${v.mode === m.key ? 'on' : ''}`} onClick={() => pick(m.key)}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+        {v.mode === 'range' && (
+          <div className="day-time">
+            <select className="f-input" value={v.from} onChange={(e) => onChange({ ...v, from: e.target.value })}>
+              {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <span>〜</span>
+            <select className="f-input" value={v.to} onChange={(e) => onChange({ ...v, to: e.target.value })}>
+              {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// レッスン可能な日時。「すべての曜日」で全体を決め、違う曜日だけ直す
+export function ScheduleTable({ schedule, all, onChange }) {
+  const sc = schedule || {};
+  return (
+    <div className="schedule">
+      <p className="schedule-note">まず「すべての曜日」で全体を決めてから、違う曜日だけを直してください。(月・火は定休日です)</p>
+      <DayRow
+        head
+        label="すべての曜日"
+        value={all}
+        onChange={(v) => {
+          const next = {};
+          OPEN_DAYS.forEach((d) => { next[d] = { ...v }; });
+          onChange(next, v);
+        }}
+      />
+      {OPEN_DAYS.map((d) => (
+        <DayRow key={d} label={d} value={sc[d]} onChange={(v) => onChange({ ...sc, [d]: v }, all)} />
+      ))}
     </div>
   );
 }
